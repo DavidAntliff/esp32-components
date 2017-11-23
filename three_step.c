@@ -29,6 +29,119 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+
+// Sub-component use cases (B is main component, A is a sub-component):
+//
+
+#if 0
+{
+    typedef struct
+    {
+        int x;
+    } A;
+
+    typedef struct
+    {
+        A a_inline;
+        A * a_ptr;
+    } B;
+#endif
+
+
+//  - statically allocate B, such that A is automatically statically allocated
+//      - Therefore A must be stored as an inline struct as there is no functional support for this.
+//      - `init` of B will call init of A.
+
+#if 0
+{
+    B b;
+    B_init(&b);  // calls A_init(b->a_inline)
+    B_free(&b);  // does not deallocate b (static)
+}
+#endif
+
+
+//  - statically allocate B, then A is provided externally (injected) as a statically or dynamically allocated sub-component
+//      - Therefore A must be stored as a pointer, or copied into an inline struct, by `init`
+//      - Where is A initialised? Where is A configured?
+//          - A would be initialised externally, before being injected
+//          - A could be configured before or after injection
+
+#if 0
+{
+    // A is static:
+    A a;
+    A_init(&a);
+
+    B b;
+    B_init(&b, &a);  // stores a, does not call A_init()
+
+    B_free(&b);      // does not deallocate b (static), does not deallocate a (externally managed)
+    A_free(&a);      // does not deallocate a (static)
+
+    // A is dynamic:
+    A * a = A_new();
+    A_init(a);
+
+    B b;
+    B_init(&b, &a);  // stores a, does not call A_init()
+
+    B_free(&b);      // does not deallocate b (static), does not deallocate a (externally managed)
+    A_free(&a);      // deallocates a (dynamic)
+}
+#endif
+
+
+//  - dynamically allocate B, such that A is automatically allocated at the same time
+//      - A must be dynamically allocated, either separately (stored as pointer) or as part of B (inline)
+
+#if 0
+{
+    B * b = B_new();  // a is allocated too? But what if it's to be injected? How to know?
+    B_init(b);        // Maybe a is allocated & init'd here instead?
+
+    B_free(&b);       // deallocates a, then deallocates b
+}
+
+//  - dynamically allocate B, then A is provided externally (injected) as a statically or dynamically allocated sub-component
+//      - A must be stored as a pointer, or copied into an inline struct, by `init`
+//      - Where is A initialised? Where is A configured?
+//          - A would be initialised externally, before being injected
+//          - A could be configured before or after injection
+
+#if 0
+{
+    // A is static:
+    A a;
+    A_init(&a);
+
+    B * b = B_new();
+    B_init_with_a(b, &a);   // stores a, does not call A_init()
+
+    B_free(&b);      // deallocate b (dynamic), does not deallocate a (externally managed)
+    A_free(&a);      // does not deallocate a (static)
+
+    // A is dynamic:
+    A * a = A_new();
+    A_init(a);
+
+    B * b = B_new();
+    B_init_with_a(b, a);    // stores a, does not call A_init()
+
+    B_free(&b);      // deallocate b (dynamic), does not deallocate a (externally managed)
+    A_free(&a);      // deallocates a (dynamic)
+}
+#endif
+
+
+
+//
+// Sub-components may be:
+//
+//  - Private: once allocated (or injected), they are hidden by the API
+//  - Public: once allocated (or injected), they are directly accessible
+
+
 /*
  * Component A Interface
  */
