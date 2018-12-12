@@ -44,6 +44,8 @@ https://github.com/DavidAntliff/esp32-i2c-lcd1602
 
 https://github.com/DavidAntliff/esp32-i2c-lcd1602-example
 
+Also works with the "2004" version - four rows of twenty characters each.
+
 ### Applications
 
 #### Digitally Controlled Oscillator
